@@ -13,17 +13,9 @@ class WeatherListTableViewController: UITableViewController, AddWeatherDelegate 
     
     private var weatherListViewModel = WeatherListViewModel()
     
-    private var lastUnitSelection :Unit!
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         self.navigationController?.navigationBar.prefersLargeTitles = true
-        
-        let userDefaults = UserDefaults.standard
-        if let value = userDefaults.value(forKey: "unit") as? String {
-            self.lastUnitSelection = Unit(rawValue: value)!
-        }
-       
     }
     
     func addWeatherDidSave(vm: WeatherViewModel) {
@@ -55,9 +47,23 @@ class WeatherListTableViewController: UITableViewController, AddWeatherDelegate 
             
             prepareSegueForSettingsTableViewController(segue: segue)
             
+        } else if segue.identifier == "WeatherDetailsViewController" {
+            
+            prepareSegueForWeatherDetailsViewController(segue: segue)
         }
        
         
+    }
+    
+    private func prepareSegueForWeatherDetailsViewController(segue: UIStoryboardSegue) {
+        
+        guard let weatherDetailsVC = segue.destination as? WeatherDetailsViewController,
+            let indexPath = self.tableView.indexPathForSelectedRow else {
+                return
+        }
+        
+        let weatherVM = self.weatherListViewModel.modelAt(indexPath.row)
+        weatherDetailsVC.weatherViewModel = weatherVM 
     }
     
     private func prepareSegueForSettingsTableViewController(segue: UIStoryboardSegue) {
@@ -106,11 +112,8 @@ extension WeatherListTableViewController: SettingsDelegate {
     
     func settingsDone(vm: SettingsViewModel) {
         
-            if self.lastUnitSelection.rawValue != vm.selectedUnit.rawValue {
-                self.weatherListViewModel.updateUnit(to: vm.selectedUnit)
-                self.tableView.reloadData()
-                self.lastUnitSelection = Unit(rawValue: vm.selectedUnit.rawValue)!
-            }
+        self.weatherListViewModel.updateUnit(to: vm.selectedUnit)
+        self.tableView.reloadData()
         
     }
     
